@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Store</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="/assets/js/firebase-config.js"></script>
+</head>
+<body onload="loadProducts()">
+  <header class="header"><div class="container"><strong>Store</strong></div></header>
+  <main class="container">
+    <h2>Products (public)</h2>
+    <div id="products" class="grid"></div>
+  </main>
+
+  <script>
+    async function loadProducts(){
+      try {
+        firebase.initializeApp(firebaseConfig);
+        const storage = firebase.storage();
+        const listRef = storage.ref('public/dropshipping');
+        const res = await listRef.listAll();
+        const grid = document.getElementById('products');
+        if(res.items.length===0){ grid.innerHTML='<p>No products yet.</p>'; return; }
+        for(const it of res.items){
+          const url = await it.getDownloadURL();
+          const card = document.createElement('div'); card.className='card';
+          card.innerHTML = `<img style="width:100%;height:160px;object-fit:cover" src="${url}"><h4>${it.name}</h4><p>£19.99</p><button class="btn">Buy (stub)</button>`;
+          grid.appendChild(card);
+        }
+      } catch(e){ console.error(e); document.getElementById('products').innerText='Failed to load products'; }
+    }
+  </script>
+</body>
+</html>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
+    authDomain: "my-social-reels.firebaseapp.com",
+    projectId: "my-social-reels",
+    storageBucket: "my-social-reels.firebasestorage.app",
+    messagingSenderId: "147742507021",
+    appId: "1:147742507021:web:1b49939c2c975f575d1544"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
