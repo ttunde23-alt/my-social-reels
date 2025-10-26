@@ -1,60 +1,3 @@
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Store</title>
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-  <script src="/assets/js/firebase-config.js"></script>
-</head>
-<body onload="loadProducts()">
-  <header class="header"><div class="container"><strong>Store</strong></div></header>
-  <main class="container">
-    <h2>Products (public)</h2>
-    <div id="products" class="grid"></div>
-  </main>
-
-  <script>
-    async function loadProducts(){
-      try {
-        firebase.initializeApp(firebaseConfig);
-        const storage = firebase.storage();
-        const listRef = storage.ref('public/dropshipping');
-        const res = await listRef.listAll();
-        const grid = document.getElementById('products');
-        if(res.items.length===0){ grid.innerHTML='<p>No products yet.</p>'; return; }
-        for(const it of res.items){
-          const url = await it.getDownloadURL();
-          const card = document.createElement('div'); card.className='card';
-          card.innerHTML = `<img style="width:100%;height:160px;object-fit:cover" src="${url}"><h4>${it.name}</h4><p>£19.99</p><button class="btn">Buy (stub)</button>`;
-          grid.appendChild(card);
-        }
-      } catch(e){ console.error(e); document.getElementById('products').innerText='Failed to load products'; }
-    }
-  </script>
-</body>
-</html>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
-    authDomain: "my-social-reels.firebaseapp.com",
-    projectId: "my-social-reels",
-    storageBucket: "my-social-reels.firebasestorage.app",
-    messagingSenderId: "147742507021",
-    appId: "1:147742507021:web:1b49939c2c975f575d1544"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,8 +5,61 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Store - My Social Reels</title>
   <link rel="stylesheet" href="assets/css/styles.css">
-  <script src="assets/js/app.js" defer></script>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
+      authDomain: "my-social-reels.firebaseapp.com",
+      projectId: "my-social-reels",
+      storageBucket: "my-social-reels.firebasestorage.app",
+      messagingSenderId: "147742507021",
+      appId: "1:147742507021:web:1b49939c2c975f575d1544"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+
+    // Load public store products
+    async function loadProducts() {
+      const grid = document.getElementById('products');
+      try {
+        const listRef = ref(storage, 'public/dropshipping');
+        const res = await listAll(listRef);
+
+        if (res.items.length === 0) {
+          grid.innerHTML = '<p>No products yet.</p>';
+          return;
+        }
+
+        for (const item of res.items) {
+          const url = await getDownloadURL(item);
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <img style="width:100%;height:160px;object-fit:cover" src="${url}" alt="${item.name}">
+            <h4>${item.name}</h4>
+            <p>£19.99</p>
+            <button class="btn">Buy (stub)</button>
+          `;
+          grid.appendChild(card);
+        }
+      } catch (error) {
+        console.error(error);
+        grid.innerHTML = '<p>Failed to load products.</p>';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadProducts);
+  </script>
 </head>
+
 <body>
   <header class="header">
     <div class="container">
@@ -78,10 +74,9 @@
   </header>
 
   <main class="container">
-    <section class="card">
-      <h2>Store</h2>
-      <p>Welcome to the dropshipping store. Products and purchase features can be added here.</p>
-    </section>
+    <h2>Store</h2>
+    <p>Welcome to our dropshipping store. Products below are loaded from Firebase Storage.</p>
+    <div id="products" class="grid"></div>
   </main>
 
   <footer class="footer">
