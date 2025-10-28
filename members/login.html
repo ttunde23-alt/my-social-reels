@@ -1,76 +1,49 @@
-<script type="module" src="../assets/js/app.js"></script>
-
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Login</title>
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="/assets/js/firebase-config.js"></script>
-  <script src="/assets/js/auth.js"></script>
-</head>
-<body onload="initFirebase()">
-  <header class="header"><div class="container"><strong>Members</strong></div></header>
-  <main class="container">
-    <div class="card" style="max-width:420px;margin:0 auto">
-      <h3>Sign in / Sign up</h3>
-      <input id="email" placeholder="christopherbrandong20@gmail.com" style="width:100%;padding:8px;margin-bottom:8px">
-      <input id="password" type="password" placeholder="Password" style="width:100%;padding:8px;margin-bottom:8px">
-      <div style="display:flex;gap:8px">
-        <button class="btn" onclick="doSignIn()">Sign in</button>
-        <button class="btn" onclick="doSignUp()">Sign up</button>
-      </div>
-      <p id="msg"></p>
-    </div>
-  </main>
-
-  <script>
-    async function doSignIn(){
-      const email = document.getElementById('email').value;
-      const pass = document.getElementById('password').value;
-      try { await signIn(email, pass); document.getElementById('msg').innerText='Signed in'; setTimeout(()=>location.href='/members/feed.html',600); }
-      catch(e){ document.getElementById('msg').innerText = e.message; }
-    }
-    async function doSignUp(){
-      const email = document.getElementById('email').value;
-      const pass = document.getElementById('password').value;
-      try { await signUp(email, pass); document.getElementById('msg').innerText='Account created'; setTimeout(()=>location.href='/members/feed.html',600); }
-      catch(e){ document.getElementById('msg').innerText = e.message; }
-    }
-  </script>
-</body>
-</html>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
-    authDomain: "my-social-reels.firebaseapp.com",
-    projectId: "my-social-reels",
-    storageBucket: "my-social-reels.firebasestorage.app",
-    messagingSenderId: "147742507021",
-    appId: "1:147742507021:web:1b49939c2c975f575d1544"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Login - My Social Reels</title>
   <link rel="stylesheet" href="../assets/css/styles.css">
-  <script src="../assets/js/app.js" defer></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
+      authDomain: "my-social-reels.firebaseapp.com",
+      projectId: "my-social-reels",
+      storageBucket: "my-social-reels.firebasestorage.app",
+      messagingSenderId: "147742507021",
+      appId: "1:147742507021:web:1b49939c2c975f575d1544"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const loginForm = document.getElementById('loginForm');
+      const message = document.getElementById('message');
+
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          message.textContent = `Welcome back, ${email}! Redirecting...`;
+          setTimeout(() => window.location.href = 'feed.html', 800);
+        } catch (error) {
+          message.textContent = error.message;
+          message.style.color = 'red';
+        }
+      });
+    });
+  </script>
 </head>
+
 <body>
   <header class="header">
     <div class="container">
@@ -85,18 +58,19 @@
   </header>
 
   <main class="container">
-    <section class="card">
+    <section class="card" style="max-width:420px;margin:0 auto;">
       <h2>Member Login</h2>
       <form id="loginForm">
         <label for="email">Email:</label><br>
         <input type="email" id="email" name="email" required><br><br>
-        
+
         <label for="password">Password:</label><br>
         <input type="password" id="password" name="password" required><br><br>
-        
-        <button type="submit">Login</button>
+
+        <button type="submit" class="btn">Login</button>
       </form>
       <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
+      <p id="message" style="margin-top:10px;"></p>
     </section>
   </main>
 
