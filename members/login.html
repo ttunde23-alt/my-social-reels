@@ -8,8 +8,16 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      GoogleAuthProvider, 
+      signInWithPopup,
+      fetchSignInMethodsForEmail,
+      linkWithPopup
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
       authDomain: "my-social-reels.firebaseapp.com",
@@ -21,22 +29,60 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const MASTER_EMAIL = "christopherbrandong20@gmail.com";
 
     window.addEventListener('DOMContentLoaded', () => {
       const loginForm = document.getElementById('loginForm');
+      const googleBtn = document.getElementById('googleBtn');
       const message = document.getElementById('message');
 
+      // Email/password login
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
         try {
-          await signInWithEmailAndPassword(auth, email, password);
-          message.textContent = `Welcome back, ${email}! Redirecting...`;
-          setTimeout(() => window.location.href = 'feed.html', 800);
+          const userCred = await signInWithEmailAndPassword(auth, email, password);
+          const user = userCred.user;
+          if (user.email === MASTER_EMAIL) {
+            message.textContent = "Welcome back, Admin!";
+          } else {
+            message.textContent = `Welcome, ${email}!`;
+          }
+          setTimeout(() => window.location.href = 'feed.html', 1000);
         } catch (error) {
           message.textContent = error.message;
+          message.style.color = 'red';
+        }
+      });
+
+      // Google sign-in
+      googleBtn.addEventListener('click', async () => {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          const user = result.user;
+          if (user.email === MASTER_EMAIL) {
+            message.textContent = "Welcome back, Admin (Google)!";
+          } else {
+            message.textContent = `Signed in as ${user.displayName}`;
+          }
+          setTimeout(() => window.location.href = 'feed.html', 800);
+        } catch (error) {
+          if (error.code === 'auth/account-exists-with-different-credential') {
+            // Handle linking if same email used for password & Google
+            const email = error.customData.email;
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+            if (methods.includes('password')) {
+              message.textContent = "That email already has a password account. Try logging in with password first.";
+            } else {
+              message.textContent = error.message;
+            }
+          } else {
+            message.textContent = error.message;
+          }
           message.style.color = 'red';
         }
       });
@@ -60,15 +106,23 @@
   <main class="container">
     <section class="card" style="max-width:420px;margin:0 auto;">
       <h2>Member Login</h2>
+
       <form id="loginForm">
         <label for="email">Email:</label><br>
-        <input type="email" id="email" name="email" required><br><br>
+        <input type="email" id="email" required value="christopherbrandong20@gmail.com"><br><br>
 
         <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
+        <input type="password" id="password" required><br><br>
 
         <button type="submit" class="btn">Login</button>
       </form>
+
+      <p style="margin:12px 0;text-align:center;">or</p>
+
+      <button id="googleBtn" class="btn" style="background:#db4437;color:#fff;width:100%;">
+        Continue with Google
+      </button>
+
       <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
       <p id="message" style="margin-top:10px;"></p>
     </section>
