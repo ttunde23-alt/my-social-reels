@@ -6,70 +6,162 @@
   <title>Member Feed - My Social Reels</title>
   <link rel="stylesheet" href="../assets/css/styles.css">
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-    import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  import { getStorage, ref, listAll, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js";
+  import { isAdmin, MASTER_EMAIL } from "../assets/js/app.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
-      authDomain: "my-social-reels.firebaseapp.com",
-      projectId: "my-social-reels",
-      storageBucket: "my-social-reels.firebasestorage.app",
-      messagingSenderId: "147742507021",
-      appId: "1:147742507021:web:1b49939c2c975f575d1544"
-    };
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
+    authDomain: "my-social-reels.firebaseapp.com",
+    projectId: "my-social-reels",
+    storageBucket: "my-social-reels.firebasestorage.app",
+    messagingSenderId: "147742507021",
+    appId: "1:147742507021:web:1b49939c2c975f575d1544"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const storage = getStorage(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const storage = getStorage(app);
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const profileBox = document.getElementById("profileBox");
-      const posts = document.getElementById("posts");
-      const signOutBtn = document.getElementById("signOutBtn");
+  const profileBox = document.getElementById("profileBox");
+  const posts = document.getElementById("posts");
+  const signOutBtn = document.getElementById("signOutBtn");
+  const adminPanel = document.getElementById("adminPanel");
 
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          window.location.href = "login.html";
-          return;
+  // Watch authentication
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    profileBox.innerHTML = `<h4>${user.email}</h4><small>${isAdmin(user) ? "Admin" : "Member"}</small>`;
+
+    if (isAdmin(user)) {
+      adminPanel.style.display = "block";
+      await loadAllMemberReels(); // Admin sees everyone’s reels
+    } else {
+      adminPanel.style.display = "none";
+      await loadUserReels(user);
+    }
+  });
+
+  // Sign out
+  signOutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "../index.html";
+  });
+
+  // Member reel list
+  async function loadUserReels(user) {
+    posts.innerHTML = "Loading your private reels...";
+    const listRef = ref(storage, `members/${user.uid}`);
+    try {
+      const res = await listAll(listRef);
+      posts.innerHTML = "";
+      if (res.items.length === 0) {
+        posts.innerHTML = "<p>No private reels yet. Upload one.</p>";
+      } else {
+        for (const item of res.items) {
+          const url = await getDownloadURL(item);
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `
+            <img class="video-thumb" src="${url}">
+            <p>${item.name}</p>
+          `;
+          posts.appendChild(div);
         }
+      }
+    } catch (e) {
+      posts.innerHTML = `<p style="color:red;">${e.message}</p>`;
+    }
+  }
+  async function loadAdminProducts() {
+  const listRef = ref(storage, 'public/dropshipping');
+  const productList = document.getElementById('productList');
+  try {
+    const res = await listAll(listRef);
+    productList.innerHTML = '';
+    if (res.items.length === 0) {
+      productList.innerHTML = '<p>No products found in store.</p>';
+      return;
+    }
+    for (const item of res.items) {
+      const url = await getDownloadURL(item);
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML = `
+        <img style="width:100%;height:160px;object-fit:cover" src="${url}">
+        <h4>${item.name}</h4>
+        <button class="btn btn-small delete-product" data-path="${item.fullPath}">Delete</button>
+      `;
+      productList.appendChild(div);
+    }
 
-        // Show user info
-        profileBox.innerHTML = `<h4>${user.email}</h4><small>Member</small>`;
-
-        // Load private uploads
-        const listRef = ref(storage, `members/${user.uid}`);
-        try {
-          const result = await listAll(listRef);
-          posts.innerHTML = "";
-          if (result.items.length === 0) {
-            posts.innerHTML = "<p>No private reels yet. Upload one.</p>";
-          } else {
-            for (const item of result.items) {
-              const url = await getDownloadURL(item);
-              const div = document.createElement("div");
-              div.className = "card";
-              div.innerHTML = `
-                <img class="video-thumb" src="${url}">
-                <p>${item.name}</p>
-              `;
-              posts.appendChild(div);
-            }
-          }
-        } catch (e) {
-          posts.innerHTML = `<p style="color:red;">Failed to load feed: ${e.message}</p>`;
+    // Handle delete buttons
+    document.querySelectorAll(".delete-product").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const path = btn.getAttribute("data-path");
+        if (confirm("Delete this product?")) {
+          await deleteObject(ref(storage, path));
+          btn.parentElement.remove();
         }
-      });
-
-      // Sign out handler
-      signOutBtn.addEventListener("click", async () => {
-        await signOut(auth);
-        alert("Signed out successfully.");
-        window.location.href = "../index.html";
       });
     });
-  </script>
+
+  } catch (e) {
+    productList.innerHTML = `<p style="color:red;">Failed to load products: ${e.message}</p>`;
+  }
+}
+
+
+  // Admin-only reel list
+  async function loadAllMemberReels() {
+    posts.innerHTML = "Loading all member reels...";
+    // List root folder members/
+    const rootRef = ref(storage, "members");
+    try {
+      const result = await listAll(rootRef);
+      posts.innerHTML = "";
+      if (result.prefixes.length === 0) {
+        posts.innerHTML = "<p>No member folders found.</p>";
+      } else {
+        for (const folder of result.prefixes) {
+          const sub = await listAll(folder);
+          for (const item of sub.items) {
+            const url = await getDownloadURL(item);
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `
+              <img class="video-thumb" src="${url}">
+              <p>${item.fullPath}</p>
+              <button class="btn btn-small delete-btn" data-path="${item.fullPath}">Delete</button>
+            `;
+            posts.appendChild(div);
+          }
+        }
+      }
+
+      // Enable delete buttons
+      document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const path = btn.getAttribute("data-path");
+          if (confirm(`Delete ${path}?`)) {
+            await deleteObject(ref(storage, path));
+            btn.parentElement.remove();
+          }
+        });
+      });
+    } catch (e) {
+      posts.innerHTML = `<p style="color:red;">${e.message}</p>`;
+    }
+  }
+</script>
+
 </head>
 
 <body>
@@ -91,7 +183,18 @@
       <h3>Your Private Feed</h3>
       <div id="posts">Loading...</div>
     </section>
+    <section id="adminProducts" class="card" style="display:none; margin-top:20px;">
+  <h3>Admin Store Manager</h3>
+  <p>Manage public dropshipping products:</p>
+  <div id="productList">Loading products...</div>
+</section>
+
   </main>
+  <section id="adminPanel" class="card" style="display:none; margin-top:20px;">
+  <h3>Admin Panel</h3>
+  <p>Here you can view or delete all member reels.</p>
+</section>
+
 
   <footer class="footer">
     <div class="container">

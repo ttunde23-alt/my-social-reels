@@ -13,4 +13,13 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 // https://firebase.google.com/docs/web/setup#available-libraries
    // TODO: Add SDKs for Firebase products that you want to use
-   
+   if (isAdmin(user)) {
+  adminPanel.style.display = "block";
+  document.getElementById("adminProducts").style.display = "block";
+  await loadAllMemberReels();
+  await loadAdminProducts();
+} else {
+  adminPanel.style.display = "none";
+  document.getElementById("adminProducts").style.display = "none";
+  await loadUserReels(user);
+}

@@ -41,6 +41,12 @@
         currentUser = user;
       }
     });
+    if (isAdmin(user)) {
+  // allow admin to upload to public/dropshipping
+} else {
+  // normal members upload to their own folder
+}
+
 
     // ✅ Upload file
     uploadBtn.addEventListener("click", async () => {

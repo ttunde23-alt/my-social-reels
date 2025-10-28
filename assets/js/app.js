@@ -108,3 +108,19 @@ export async function listMemberFiles() {
   })));
   return items;
 }
+// assets/js/app.js (append this)
+export const MASTER_EMAIL = "christopherbrandong20@gmail.com";
+
+export function isAdmin(user) {
+  return user && user.email === MASTER_EMAIL;
+}
+if (isAdmin(user)) {
+  adminPanel.style.display = "block";
+  document.getElementById("adminProducts").style.display = "block";
+  await loadAllMemberReels();
+  await loadAdminProducts();
+} else {
+  adminPanel.style.display = "none";
+  document.getElementById("adminProducts").style.display = "none";
+  await loadUserReels(user);
+}
