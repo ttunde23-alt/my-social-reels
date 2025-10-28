@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sign Up - My Social Reels</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
+      authDomain: "my-social-reels.firebaseapp.com",
+      projectId: "my-social-reels",
+      storageBucket: "my-social-reels.firebasestorage.app",
+      messagingSenderId: "147742507021",
+      appId: "1:147742507021:web:1b49939c2c975f575d1544"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const form = document.getElementById("signupForm");
+    const googleBtn = document.getElementById("googleSignup");
+    const msg = document.getElementById("msg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = form.email.value;
+      const password = form.password.value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        msg.textContent = "Account created successfully!";
+        setTimeout(() => (window.location.href = "login.html"), 1000);
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+
+    googleBtn.addEventListener("click", async () => {
+      try {
+        await signInWithPopup(auth, provider);
+        msg.textContent = "Signed up with Google!";
+        setTimeout(() => (window.location.href = "feed.html"), 1000);
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+      <strong>MySocialReels</strong>
+      <nav>
+        <a href="../index.html">Home</a> · 
+        <a href="../reels.html">Reels</a> · 
+        <a href="login.html">Members</a> · 
+        <a href="../dropshipping.html">Store</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card" style="max-width:420px;margin:0 auto">
+      <h2>Create Your Account</h2>
+      <form id="signupForm">
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+        
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required><br><br>
+        
+        <button type="submit">Sign Up</button>
+      </form>
+      <br>
+      <button id="googleSignup" class="btn">Sign up with Google</button>
+      <p id="msg"></p>
+      <p>Already have an account? <a href="login.html">Login here</a></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 My Social Reels</p>
+    </div>
+  </footer>
+</body>
+</html>
