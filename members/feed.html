@@ -1,84 +1,102 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Feed</title>
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-  <script src="/assets/js/firebase-config.js"></script>
-  <script src="/assets/js/auth.js"></script>
-  <script src="/assets/js/app.js"></script>
+  <title>Member Feed - My Social Reels</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
+      authDomain: "my-social-reels.firebaseapp.com",
+      projectId: "my-social-reels",
+      storageBucket: "my-social-reels.firebasestorage.app",
+      messagingSenderId: "147742507021",
+      appId: "1:147742507021:web:1b49939c2c975f575d1544"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const profileBox = document.getElementById("profileBox");
+      const posts = document.getElementById("posts");
+      const signOutBtn = document.getElementById("signOutBtn");
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        // Show user info
+        profileBox.innerHTML = `<h4>${user.email}</h4><small>Member</small>`;
+
+        // Load private uploads
+        const listRef = ref(storage, `members/${user.uid}`);
+        try {
+          const result = await listAll(listRef);
+          posts.innerHTML = "";
+          if (result.items.length === 0) {
+            posts.innerHTML = "<p>No private reels yet. Upload one.</p>";
+          } else {
+            for (const item of result.items) {
+              const url = await getDownloadURL(item);
+              const div = document.createElement("div");
+              div.className = "card";
+              div.innerHTML = `
+                <img class="video-thumb" src="${url}">
+                <p>${item.name}</p>
+              `;
+              posts.appendChild(div);
+            }
+          }
+        } catch (e) {
+          posts.innerHTML = `<p style="color:red;">Failed to load feed: ${e.message}</p>`;
+        }
+      });
+
+      // Sign out handler
+      signOutBtn.addEventListener("click", async () => {
+        await signOut(auth);
+        alert("Signed out successfully.");
+        window.location.href = "../index.html";
+      });
+    });
+  </script>
 </head>
-<body onload="checkAuth()">
+
+<body>
   <header class="header">
     <div class="container row" style="align-items:center;justify-content:space-between">
       <strong>Member Feed</strong>
-      <div><button class="btn" onclick="signOutUser().then(()=>location.href='/')">Sign out</button></div>
+      <button class="btn" id="signOutBtn">Sign Out</button>
     </div>
   </header>
 
   <main class="container row">
     <aside class="card profile-left">
       <div id="profileBox"><small>Loading profile...</small></div>
-      <p><a href="/members/upload.html">Upload</a></p>
+      <p><a href="upload.html">Upload</a></p>
+      <p><a href="profile.html">My Profile</a></p>
     </aside>
 
     <section class="card feed-main" style="min-height:300px">
-      <h3>Your private feed</h3>
+      <h3>Your Private Feed</h3>
       <div id="posts">Loading...</div>
     </section>
   </main>
 
-  <script>
-    async function checkAuth(){
-      await initFirebase();
-      const u = firebase.auth().currentUser;
-      if(!u){
-        // wait briefly for onAuthStateChanged
-        window.addEventListener('authStateChanged', e => { if(!e.detail) location.href='/members/login.html'; else loadFeed(e.detail); });
-        setTimeout(()=> { if(!firebase.auth().currentUser) location.href='/members/login.html'; }, 600);
-      } else loadFeed(u);
-    }
-
-    async function loadFeed(user){
-      document.getElementById('profileBox').innerHTML = `<h4>${user.email}</h4><small>Member</small>`;
-      // For demo: list files in members/{uid} as "private reels"
-      try {
-        const files = await listMemberFiles();
-        const posts = document.getElementById('posts');
-        posts.innerHTML = '';
-        if(files.length === 0) posts.innerHTML = '<p>No private reels yet. Upload one.</p>';
-        files.forEach(f => {
-          const d = document.createElement('div'); d.className='card';
-          d.innerHTML = `<img class="video-thumb" src="${f.url}"><p>${f.name}</p>`;
-          posts.appendChild(d);
-        });
-      } catch(e){
-        document.getElementById('posts').innerText = 'Failed to load feed: '+e.message;
-      }
-    }
-  </script>
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 My Social Reels</p>
+    </div>
+  </footer>
 </body>
 </html>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
-    authDomain: "my-social-reels.firebaseapp.com",
-    projectId: "my-social-reels",
-    storageBucket: "my-social-reels.firebasestorage.app",
-    messagingSenderId: "147742507021",
-    appId: "1:147742507021:web:1b49939c2c975f575d1544"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-</script>
