@@ -40,3 +40,23 @@ const firebaseConfig = {
   document.getElementById("adminProducts").style.display = "none";
   await loadUserReels(user);
 }
+// List of admin emails
+const admins = [
+  "christopherbrandong20@gmail.com"
+];
+
+// Check if current user is admin
+function isAdmin(user) {
+  return user && admins.includes(user.email);
+}
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return window.location.href = "login.html";
+
+  if (isAdmin(user)) {
+    document.getElementById("adminPanel").style.display = "block";
+    // Load admin features
+  } else {
+    document.getElementById("adminPanel").style.display = "none";
+    // Load regular member features
+  }
+});

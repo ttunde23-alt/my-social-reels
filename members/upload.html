@@ -80,6 +80,12 @@
         }
       );
     });
+    async function uploadPublicFile(file) {
+  const user = firebase.auth().currentUser;
+  if (!isAdmin(user)) throw new Error("Unauthorized: Only admins can upload public files");
+  // proceed with upload...
+}
+
   </script>
 </head>
 

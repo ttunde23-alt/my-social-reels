@@ -145,6 +145,23 @@
           }
         }
       }
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  // Show admin sections if user is admin
+  const adminPanel = document.getElementById("adminPanel");
+  if (isAdmin(user)) {
+    adminPanel.style.display = "block"; // Show admin features
+    await loadAllMemberReels();
+    await loadAdminProducts();
+  } else {
+    adminPanel.style.display = "none";
+    await loadUserReels(user);
+  }
+});
 
       // Enable delete buttons
       document.querySelectorAll(".delete-btn").forEach(btn => {
@@ -203,3 +220,7 @@
   </footer>
 </body>
 </html>
+<div id="adminPanel" style="display:none;">
+  <h3>Admin Panel</h3>
+  <p>Upload public reels, manage products, etc.</p>
+</div>
