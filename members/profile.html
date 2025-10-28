@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Profile - My Social Reels</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTG6WeUnp4IonF7rq9HPMbGKBkMFt583o",
+      authDomain: "my-social-reels.firebaseapp.com",
+      projectId: "my-social-reels",
+      storageBucket: "my-social-reels.firebasestorage.app",
+      messagingSenderId: "147742507021",
+      appId: "1:147742507021:web:1b49939c2c975f575d1544"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    const userEmail = document.getElementById("userEmail");
+    const userUploads = document.getElementById("userUploads");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("You must be logged in to view your profile.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Show user info
+      userEmail.textContent = user.email;
+
+      // Load their uploads
+      const listRef = ref(storage, `members/${user.uid}`);
+      try {
+        const result = await listAll(listRef);
+        if (result.items.length === 0) {
+          userUploads.innerHTML = "<p>No uploads yet.</p>";
+        } else {
+          for (const item of result.items) {
+            const url = await getDownloadURL(item);
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `
+              <img src="${url}" style="width:100%;height:160px;object-fit:cover">
+              <p>${item.name}</p>
+            `;
+            userUploads.appendChild(div);
+          }
+        }
+      } catch (e) {
+        userUploads.innerHTML = `<p style="color:red;">Error loading uploads: ${e.message}</p>`;
+      }
+    });
+
+    // Log out
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      alert("Logged out.");
+      window.location.href = "../index.html";
+    });
+  </script>
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+      <strong>MySocialReels</strong>
+      <nav>
+        <a href="../index.html">Home</a> · 
+        <a href="../reels.html">Reels</a> · 
+        <a href="upload.html">Upload</a> · 
+        <a href="../dropshipping.html">Store</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card" style="max-width:600px;margin:0 auto">
+      <h2>My Profile</h2>
+      <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <button class="btn" id="logoutBtn">Logout</button>
+    </section>
+
+    <section class="card">
+      <h3>My Uploads</h3>
+      <div id="userUploads" class="grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 My Social Reels</p>
+    </div>
+  </footer>
+</body>
+</html>
