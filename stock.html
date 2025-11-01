@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Stocks</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <header>
+    <h2>Live Stock Prices</h2>
+  </header>
+  <main>
+    <table id="stocks-table">
+      <thead>
+        <tr><th>Symbol</th><th>Price</th><th>Change</th><th>Source</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <script>
+    async function updateStocks() {
+      try {
+        const res = await fetch('https://<project-id>.cloudfunctions.net/getStocks');
+        const data = await res.json();
+        const tbody = document.querySelector('#stocks-table tbody');
+        tbody.innerHTML = '';
+        data.forEach(stock => {
+          const row = `<tr>
+            <td>${stock.symbol}</td>
+            <td>${stock.price}</td>
+            <td style="color:${stock.change.startsWith('-') ? 'red' : 'green'}">${stock.change}</td>
+            <td>${stock.source}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      } catch (e) {
+        console.error(e);
+        document.querySelector('#stocks-table tbody').innerHTML = '<tr><td colspan="4">Failed to load stocks</td></tr>';
+      }
+    }
+
+    updateStocks();
+    setInterval(updateStocks, 5000); // refresh every 5 seconds
+  </script>
+</body>
+</html>
