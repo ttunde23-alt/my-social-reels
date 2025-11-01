@@ -22,7 +22,7 @@
   <script>
     async function updateStocks() {
       try {
-        const res = await fetch('https://<project-id>.cloudfunctions.net/getStocks');
+        const res = await fetch('https://<my-social-reels>.cloudfunctions.net/getStocks');
         const data = await res.json();
         const tbody = document.querySelector('#stocks-table tbody');
         tbody.innerHTML = '';
