@@ -96,9 +96,9 @@
       <strong>MySocialReels</strong>
       <nav>
         <a href="../index.html">Home</a> · 
-        <a href="../reels.html">Reels</a> · 
-        <a href="login.html">Members</a> · 
-        <a href="../dropshipping.html">Store</a>
+        <a href="../reels.html">Reels</a> ·  
+        <a href="../dropshipping.html">Store</a> ·  
+        <a href="stock.html"> stocks</a>
       </nav>
     </div>
   </header>
@@ -136,24 +136,3 @@
 </body>
 </html>
 <button id="googleSignIn" class="btn">Sign in with Google</button>
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-
-const auth = getAuth();
-const provider = new GoogleAuthProvider();
-
-document.getElementById("googleSignIn").addEventListener("click", async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    
-    // Redirect based on role
-    if (isAdmin(user)) {
-      alert(`Welcome admin ${user.email}`);
-    } else {
-      alert(`Welcome ${user.email}`);
-    }
-    window.location.href = "../members/feed.html"; // redirect to members page
-  } catch (error) {
-    alert(error.message);
-  }
-});
